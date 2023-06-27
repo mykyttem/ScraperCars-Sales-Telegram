@@ -1,6 +1,6 @@
 import sqlite3
 
-API_TOKEN = 'token_bot'
+API_TOKEN = 'your_token'
 ID_CHANNEL = -1001802881394
 TIMER = ''
 
@@ -10,6 +10,12 @@ con = sqlite3.connect("channel_cars.db")
 cur = con.cursor()
 
 cur.execute("""CREATE TABLE IF NOT EXISTS cars(
+    state_number TEXT,
+    photo TEXT,
+
     price INTEGER,
-    state_number TEXT
+    brand TEXT,
+    url_auto_ria TEXT,
+    race TEXT,
+    location TEXT
 )""")
