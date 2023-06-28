@@ -46,8 +46,23 @@ def parse_cars() -> list:
             race = info.find('li', class_='item-char js-race').get_text(strip=True)
             location = info.find('li', class_='item-char view-location js-location').get_text(strip=True)
 
+
+            # parse page cars
+            response_page_cars = requests.get(urls_car)
+            soup_page_cars = BeautifulSoup(response_page_cars.text, "lxml")
+            
+            photos_block = soup_page_cars.find_all('div', id='photosBlock')
+            for photos in photos_block:
+                list_photo = photos.find_all('picture')
+                album_photos = []
+
+                for photo in list_photo:
+                    album_photos.append(photo.find('img')['src'])
+
+                car_dict['album_photos'] = album_photos 
+
+
             # save in dict
-            car_dict['photo'] = photo_link
             car_dict['brand'] = brand
             car_dict['price'] = price_usd
             car_dict['race'] = race
@@ -55,5 +70,6 @@ def parse_cars() -> list:
             car_dict['url_auto_ria'] = urls_car
 
             cars_list.append(car_dict)
+
 
     return cars_list
