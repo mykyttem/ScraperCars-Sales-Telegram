@@ -1,11 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
 
-url = "https://auto.ria.com/uk/search/?categories.main.id=1&brand.id[0]=79&model.id[0]=2104&indexName=auto&abroad.not=0&customnot=1&damage.not=0&country.import.id=840"
-response = requests.get(url)
-soup = BeautifulSoup(response.text, "lxml")
-
-#TODO: scraping for all pages paginations 
 
 """
 Getting results for scraper
@@ -17,35 +12,35 @@ Call function in bot, and from list, dict, get data car
 def parse_cars() -> list:
 
     cars_list = []
+    url = "https://auto.ria.com/uk/search/?indexName=auto&categories.main.id=1&brand.id[0]=79&model.id[0]=2104&country.import.usa.not=-1&country.import.id=840&price.currency=1&abroad.not=0&custom.not=1&damage.not=0&page=1&size=10"
+
+    response = requests.get(url)
+    soup = BeautifulSoup(response.text, "lxml")
     search_result = soup.find_all('div', id='searchResults')
 
+
+    # parse cars
     for cars in search_result:
         block_car = cars.find_all('section', class_='ticket-item')
 
         for info in block_car:
             car_dict = {}
-            
-            state_number_text = info.find_all('span', class_='state-num ua')           
 
             # under the <span> tag element
-            for numbers in state_number_text:
-                text_state_number = numbers.text.strip()
-                list_numbers_state = text_state_number.split()[:3]
-                state_number = ''.join(list_numbers_state)
-                break
-
+            state_number_text = info.select('span.state-num.ua')
+            state_number = ''
+            if state_number_text:
+                text_state_number = state_number_text[0].get_text(strip=True)
+                state_number = ''.join(text_state_number.split()[:3])
 
             car_dict['state_number'] = state_number
-            
+
             # getting elements
-            photo_link = info.find('img')['src']
-
-            brand = info.find('a', class_='address').get_text(strip=True)
-            urls_car = info.find('a', class_='m-link-ticket').get('href')
-            price_usd = info.find('span', class_='bold size22 green').get_text(strip=True)
-            race = info.find('li', class_='item-char js-race').get_text(strip=True)
-            location = info.find('li', class_='item-char view-location js-location').get_text(strip=True)
-
+            brand = info.select_one('a.address').get_text(strip=True)
+            urls_car = info.select_one('a.m-link-ticket')['href']
+            price_usd = info.select_one('span.bold.size22.green').get_text(strip=True)
+            race = info.select_one('li.item-char.js-race').get_text(strip=True)
+            location = info.select_one('li.item-char.view-location.js-location').get_text(strip=True)
 
             # parse page cars
             response_page_cars = requests.get(urls_car)
@@ -60,7 +55,7 @@ def parse_cars() -> list:
                     album_photos.append(photo.find('img')['src'])
 
                 car_dict['album_photos'] = album_photos 
-
+                
 
             # save in dict
             car_dict['brand'] = brand

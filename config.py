@@ -1,8 +1,7 @@
 import sqlite3
 
 API_TOKEN = 'your_token'
-ID_CHANNEL = -1001802881394
-TIMER = ''
+ID_CHANNEL = 'your_id_channel'
 
 
 # connect DB
