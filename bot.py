@@ -1,28 +1,25 @@
 import json
 import logging
-from aiogram import executor
+
 from aiogram import types 
 from aiogram import Bot, Dispatcher
 
 """ 
     Connect and add bot for channel
-    Send result scraping in channel
+    When the file is launched, the bot starts sending scraping results
 """
 
-from config import API_TOKEN, ID_CHANNEL, TIMER, cur, con    
+from config import API_TOKEN, ID_CHANNEL, cur, con    
 from scraper import parse_cars
 
 bot = Bot(token=API_TOKEN)
 dp = Dispatcher(bot)       
 logging.basicConfig(level=logging.INFO)
-dp.message_preprocessing_delay = 2.0
-
 
 
 list_parse_cars = []    
 
-@dp.message_handler(commands=['start'])
-async def start(message: types.Message):
+async def send_results_scraper():
     """ 
         Call function, getting dict keys
         If not in DB, save car, and send car in channel
@@ -69,17 +66,13 @@ async def start(message: types.Message):
                     break
 
                 # send 
-                info_car.append(types.InputMediaPhoto(media=photo))
+                year_car = brand[-4:]
+                usaAuction_url = f"https://www.iaai.com/Search?Keyword={year_car}%20Toyota%20Sequoia"
+                info_car.append(types.InputMediaPhoto(media=photo, caption=f"{brand}☝\n 🇺🇦 {url_auto_ria}\n  🇺🇸 - {usaAuction_url}\n 💵: {price}$\n ⚙️ {race}\n 📌 {location}", disable_web_page_preview=True))
                 photo_counter += 1
             
-            
-            """  """
-
+            # the description is displayed when you click on the album
             await bot.send_media_group(ID_CHANNEL, media=info_car)
-
-            year_car = brand[-4:]
-            usaAuction_url = f"https://www.iaai.com/Search?Keyword={year_car}%20Toyota%20Sequoia"
-            await bot.send_message(ID_CHANNEL, f"{brand}☝\n 🇺🇦 {url_auto_ria}\n  🇺🇸 - {usaAuction_url}\n 💵: {price}$\n ⚙️ {race}\n 📌 {location}", disable_web_page_preview=True)
 
             # generate unique value, state number and make of the car and add in list
             list_parse_cars.append(state_number + brand)
@@ -115,13 +108,8 @@ async def start(message: types.Message):
                 db_brand = car_db[2]
                 db_url_auto_ria = car_db[6]             
 
-                # send 
                 info_car.append(types.InputMediaPhoto(media=str(db_album_photo).replace('[', '').replace(']', '').replace('"', ''))) 
-            
+
+            # send 
             await bot.send_media_group(ID_CHANNEL, media=info_car)
-            await bot.send_message(ID_CHANNEL, f"Автомобіль зняли з продажу {db_brand}\n {db_url_auto_ria}\n 💵 {db_price}\n ⚙️ {db_race}\n 📌 {db_location}")    
-            
-
-
-if __name__ == '__main__':
-    executor.start_polling(dp, skip_updates=True)
+            await bot.send_message(ID_CHANNEL, f"Автомобіль зняли з продажу {db_brand}\n {db_url_auto_ria}\n 💵 {db_price}\n ⚙️ {db_race}\n 📌 {db_location}", disable_web_page_preview=True)    
